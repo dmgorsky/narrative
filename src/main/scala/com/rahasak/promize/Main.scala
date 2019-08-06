@@ -9,7 +9,7 @@ import scala.util.{Failure, Success, Try}
 
 object Main extends App {
 
-  flatMap()
+  chain()
 
   /**
     * Get uri of blob
@@ -180,7 +180,7 @@ object Main extends App {
     * Chain multiple futures
     */
   def chain(): Unit = {
-    // handle sequence future with flatMap
+    // handle sequence of future with flatMap
     val f1: Future[String] = blobUri(34192).flatMap(uri => downloadBlob(uri)).flatMap(blob => decodeBlob(blob))
     println(Await.result(f1, 10.seconds))
 
