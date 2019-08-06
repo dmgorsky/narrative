@@ -1,5 +1,7 @@
 package com.rahasak.connect
 
+import java.util.Base64
+
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.concurrent.{Await, Future}
@@ -7,19 +9,60 @@ import scala.util.{Failure, Success, Try}
 
 object Main extends App {
 
-  await()
+  flatMap()
 
   /**
-    * Mock funcation to download blob
+    * Get uri of blob
+    *
+    * @param id - blob id
+    */
+  def blobUri(id: Long): Future[String] = {
+    Future {
+      Thread.sleep(1000)
+
+      s"http://blobs/$id"
+    }
+  }
+
+  /**
+    * Download blob from http
+    *
     * @param uri uri of the blob
     * @return base64 encoded blob string
     */
-  def downloadBlob(uri: String) = {
+  def downloadBlob(uri: String): Future[String] = {
     Future {
-      Thread.sleep(5000)
+      Thread.sleep(2000)
 
       if (!uri.startsWith("http")) throw new IllegalArgumentException("invalid uri")
-      Option("cmFoYXNhayBsYWJh")
+      "cmFoYXNhayBsYWJz"
+    }
+  }
+
+  /**
+    * Fetch blob from ftp
+    *
+    * @param uri ftp uri
+    * @return
+    */
+  def fetchBlob(uri: String): Future[String] = {
+    Future {
+      Thread.sleep(2000)
+
+      "cmFoYXNhayBsYWJz"
+    }
+  }
+
+  /**
+    * Decode base64 encoded blob
+    *
+    * @param blob blob
+    */
+  def decodeBlob(blob: String) = {
+    Future {
+      Thread.sleep(2000)
+
+      new String(Base64.getDecoder.decode(blob))
     }
   }
 
@@ -27,19 +70,12 @@ object Main extends App {
     * Handle future complete
     */
   def onComplete(): Unit = {
-    //    def future(wait: Long) = Future {
-    //      println("future executing")
-    //      Thread.sleep(wait)
-    //      s"future completed after ${wait / 1000} seconds"
-    //    }
-    //
-    //    future(-12).onComplete {
-    //      case Success(r) =>
-    //        println(r)
-    //      case Failure(e) =>
-    //        println(s"future failed, ${e.getMessage}")
-    //        e.printStackTrace()
-    //    }
+    downloadBlob("http://blobs/19301").onComplete {
+      case Success(b) =>
+        println(s"success download $b")
+      case Failure(e) =>
+        println(s"fail download, ${e.getMessage}")
+    }
 
     // wait till few seconds on main thread until future executes and finish its operation
     // otherwise main thread will exit before future execute, then you won't see anything
@@ -47,122 +83,113 @@ object Main extends App {
   }
 
   /**
-    * Wait till future complete with Await
+    * Wait till future complete
     */
   def await(): Unit = {
     // wait till future complete, we don't need to have sleep on main thread as with onComplete
-    val out = Await.result(downloadBlob("http://blobs/41221"), 10.seconds)
-    println(out)
+    val blob = Await.result(downloadBlob("http://blobs/41221"), 10.seconds)
+    println(blob)
+
+    // handle future error with Try
+    Try(Await.result(downloadBlob("ftp://blobs/8671"), 10.seconds)) match {
+      case Success(b) =>
+        println(s"success download $b")
+      case Failure(e) =>
+        println(s"fail download, ${e.getMessage}")
+    }
   }
 
   /**
     * Handle future error on Await with Try
     */
   def tryAwait(): Unit = {
-    def future(wait: Long) = Future {
-      println("future executing")
-      Thread.sleep(wait)
-      s"future completed after ${wait / 1000} seconds"
-    }
-
-    Try(Await.result(future(-10), 10.seconds)) match {
-      case Success(r) =>
-        println(r)
+    Try(Await.result(downloadBlob("ftp://blobs/8671"), 10.seconds)) match {
+      case Success(b) =>
+        println(s"success download $b")
       case Failure(e) =>
-        println(s"future failed, ${e.getMessage}")
+        println(s"fail download, ${e.getMessage}")
     }
   }
 
   /**
-    * Handle error thrown on future, return default value on error
+    * Handle error throws in future, return default value on error
     */
-  def recover() = {
-    def future(wait: Long) = Future {
-      println("future executing")
-      Thread.sleep(wait)
-      s"future completed after ${wait / 1000} seconds"
-    }
-
-    val f = future(-10).recover {
+  def recover(): Unit = {
+    val f: Future[String] = downloadBlob("ftp://blobs/8671").recover {
       case e =>
-        println("error caught")
-        e.getMessage
+        println(s"fail download, ${e.getMessage}")
+        "empty blob"
     }
     println(Await.result(f, 10.seconds))
   }
 
   /**
-    * Execute anothre future operation on failure
+    * Execute another future operation on failure
     */
-  def recoverWith() = {
-    def future(wait: Long) = Future {
-      println("future executing")
-      Thread.sleep(wait)
-      s"future completed after ${wait / 1000} seconds"
-    }
-
-    val f = future(-10).recoverWith {
+  def recoverWith(): Unit = {
+    val f: Future[String] = downloadBlob("ftp://blobs/8671").recoverWith {
       case e =>
-        println("error caught")
-        Future(e.getMessage)
+        println(s"fail download, ${e.getMessage}")
+        Future {
+          "empty blob"
+        }
     }
     println(Await.result(f, 10.seconds))
   }
 
   /**
-    * provide alteranative method to execute when future failed
-    *
-    * @return
+    * Provide alternative method to execute when future failed
     */
-  def fallbackTo() = {
-    def future(wait: Long) = Future {
-      println("future executing")
-      Thread.sleep(wait)
-      s"future completed after ${wait / 1000} seconds"
+  def fallbackTo(): Unit = {
+    val f: Future[String] = downloadBlob("ftp://blobs/8671").fallbackTo {
+      println(s"fetch from ftp")
+      // fetch blob via ftp
+      fetchBlob("ftp://blobs/8671")
     }
+    println(Await.result(f, 10.seconds))
+  }
 
-    // alteranative future to excute if first future failed
-    val f2 = Future(10)
+  /**
+    * Map future output and return new future
+    */
+  def map(): Unit = {
+    // map will return new future
+    val f = downloadBlob("http://blobs/8671").map(p => new String(Base64.getDecoder.decode(p)))
+    println(Await.result(f, 10.seconds))
+  }
 
-    val f3 = future(-10).fallbackTo(f2)
+  /**
+    * Handle nested futures
+    */
+  def flatMap(): Unit = {
+    // flatMap requires to returns the value wrapping it in Future
+    val f1: Future[String] = downloadBlob("http://blobs/8671").flatMap { p =>
+      Future {
+        new String(Base64.getDecoder.decode(p))
+      }
+    }
+    println(Await.result(f1, 10.seconds))
+
+    // remove nested future and obtains one future with flatMap
+    val f2: Future[Future[String]] = Future(downloadBlob("http://blobs/8671"))
+    val f3: Future[String] = f2.flatMap(_.map(p => new String(Base64.getDecoder.decode(p))))
     println(Await.result(f3, 10.seconds))
   }
 
-  def map() = {
-    val f1 = Future(10)
-
-    // map will return new future
-    val f2 = f1.map(p => p * 2)
-    println(Await.result(f2, 10.seconds))
-  }
-
-  def flatMap() = {
-    val f1 = Future(10)
-
-    // flatMap will remove future, if want another future we need to wrap the result with Future again
-    val f2 = f1.flatMap(p => Future(p * 2))
-    println(Await.result(f2, 10.seconds))
-
-    // we can remove nested futures and obtains one future with flatMap
-    val f3 = Future(Future(10))
-    val f4 = f3.flatMap(_.map(_ * 3))
-    println(Await.result(f4, 10.seconds))
-  }
-
-  def chain() = {
-    // we can handle sequence ftures with flatmap
-    def getUri(id: Int): Future[String] = Future(s"http://dev.localhost:8761/blobs/$id")
-
-    def downloadBlob(uri: String): Future[String] = Future("base64 encoded blob")
-
-    val f1 = getUri(1801).flatMap(uri => downloadBlob(uri))
+  /**
+    * Chain multiple futures
+    */
+  def chain(): Unit = {
+    // handle sequence future with flatMap
+    val f1: Future[String] = blobUri(34192).flatMap(uri => downloadBlob(uri)).flatMap(blob => decodeBlob(blob))
     println(Await.result(f1, 10.seconds))
 
-    // alos we can handle chain of gureus with for yield
-    val f2 = for {
-      uri <- getUri(1899)
+    // we can handle chain of futures with for yield
+    val f2: Future[String] = for {
+      uri <- blobUri(54513)
       blob <- downloadBlob(uri)
-    } yield blob
+      decoded <- decodeBlob(blob)
+    } yield decoded
     println(Await.result(f2, 10.seconds))
   }
 
