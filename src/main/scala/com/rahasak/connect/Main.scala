@@ -1,192 +1,169 @@
 package com.rahasak.connect
 
-import com.rahasak.connect.protocol._
-import spray.json.DefaultJsonProtocol._
-import spray.json._
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
+import scala.util.{Failure, Success, Try}
 
 object Main extends App {
 
-  handleLanguage()
-  handleToken()
-  handleResponse()
-  handleStatus()
-  handleAccount()
-  handleTransaction()
-  handlePromize()
-  handleDocument()
+  await()
 
   /**
-    * Handle plain object
+    * Mock funcation to download blob
+    * @param uri uri of the blob
+    * @return base64 encoded blob string
     */
-  def handleLanguage(): Unit = {
-    implicit val languageFormat: JsonFormat[Language] = jsonFormat3(Language)
-    val obj = Language("001", "haskell", isFunctional = true)
-    println(obj.toJson.toString())
+  def downloadBlob(uri: String) = {
+    Future {
+      Thread.sleep(5000)
 
-    val json =
-      """
-        |{
-        |  "id":"001",
-        |  "isFunctional":true,
-        |  "name":"haskell"
-        |}
-      """.stripMargin
-    println(json.parseJson.convertTo[Language])
+      if (!uri.startsWith("http")) throw new IllegalArgumentException("invalid uri")
+      Option("cmFoYXNhayBsYWJh")
+    }
   }
 
   /**
-    * Handle objects with option
+    * Handle future complete
     */
-  def handleToken(): Unit = {
-    implicit val tokenFormat: JsonFormat[Token] = jsonFormat4(Token)
-    val obj = Token("001", "rahasak", "labs", None)
-    println(obj.toJson.toString)
+  def onComplete(): Unit = {
+    //    def future(wait: Long) = Future {
+    //      println("future executing")
+    //      Thread.sleep(wait)
+    //      s"future completed after ${wait / 1000} seconds"
+    //    }
+    //
+    //    future(-12).onComplete {
+    //      case Success(r) =>
+    //        println(r)
+    //      case Failure(e) =>
+    //        println(s"future failed, ${e.getMessage}")
+    //        e.printStackTrace()
+    //    }
 
-    val json =
-      """
-        |{
-        |  "id":"001",
-        |  "name":"rahasak",
-        |  "value":"labs"
-        |}
-      """.stripMargin
-    println(json.parseJson.convertTo[Token])
+    // wait till few seconds on main thread until future executes and finish its operation
+    // otherwise main thread will exit before future execute, then you won't see anything
+    Thread.sleep(10000)
   }
 
   /**
-    * Handle nested object
+    * Wait till future complete with Await
     */
-  def handleResponse(): Unit = {
-    implicit val metaFormat: JsonFormat[Meta] = jsonFormat4(Meta)
-    implicit val userFormat: JsonFormat[User] = jsonFormat3(User)
-    implicit val responseFormat: JsonFormat[Response] = jsonFormat2(Response)
-    val obj = Response(
-      Meta(0, 10, 3, 243),
-      List(
-        User("001", "lambda", 26),
-        User("002", "ops", 28),
-        User("003", "rahasak", 26)
-      )
-    )
-    println(obj.toJson.toString())
-
-    val json =
-      """
-        |{
-        |  "meta":{"count":3,"limit":10,"offset":0,"total":243},
-        |  "users":[
-        |    {"age":26,"id":"001","name":"lambda"},
-        |    {"age":28,"id":"002","name":"ops"},
-        |    {"age":26,"id":"003","name":"rahasak"}
-        |  ]
-        |}
-      """.stripMargin
-    println(json.parseJson.convertTo[Response])
+  def await(): Unit = {
+    // wait till future complete, we don't need to have sleep on main thread as with onComplete
+    val out = Await.result(downloadBlob("http://blobs/41221"), 10.seconds)
+    println(out)
   }
 
   /**
-    * Custom read
+    * Handle future error on Await with Try
     */
-  def handleStatus(): Unit = {
-    import StatusProtocol._
-    val json =
-      """
-        {
-          "OUTRESPONSEDATA":{
-            "OUTSTATUS":"1",
-            "OUTRESULTDESC": "ACCOUNT-POSTING COMPLETED"
-          }
-        }
-      """.stripMargin
-    println(json.parseJson.convertTo[Status])
+  def tryAwait(): Unit = {
+    def future(wait: Long) = Future {
+      println("future executing")
+      Thread.sleep(wait)
+      s"future completed after ${wait / 1000} seconds"
+    }
+
+    Try(Await.result(future(-10), 10.seconds)) match {
+      case Success(r) =>
+        println(r)
+      case Failure(e) =>
+        println(s"future failed, ${e.getMessage}")
+    }
   }
 
   /**
-    * Complex read
+    * Handle error thrown on future, return default value on error
     */
-  def handleAccount(): Unit = {
-    import AccountProtocol._
-    val json =
-      """
-        |{"OUTCIF_NIC":"87231212V",
-        |"OUTACCOUNTNOS":["367431112","15764288","","","","","","","","","","","","","","","","",""],
-        |"OUTRELATIONSHIP":["SOW","SOW","","","","","","","","","","","","","","","","","","","",""],
-        |"OUTSHORTNAME":["RAHASAK LABS","RAHASAK LABS","","","","","","","","","","","","","","","","","",""],
-        |"OUTACCOUNTTYPE":["Savings","Savings","","","","","","","","","","","","","","","","","","","",""],
-        |"OUTACCOUNTBALANCE":["00000000000000000","00000000008000000","","","","","","","","","","","","","",""]}
-      """.stripMargin
-    println(json.parseJson.convertTo[Account])
+  def recover() = {
+    def future(wait: Long) = Future {
+      println("future executing")
+      Thread.sleep(wait)
+      s"future completed after ${wait / 1000} seconds"
+    }
+
+    val f = future(-10).recover {
+      case e =>
+        println("error caught")
+        e.getMessage
+    }
+    println(Await.result(f, 10.seconds))
   }
 
   /**
-    * Custom write
+    * Execute anothre future operation on failure
     */
-  def handleTransaction(): Unit = {
-    import TransactionProtocol._
-    val obj = Transaction("1112233", "445566", "3500", null, "rahasak transfer")
-    println(obj.toJson.toString())
+  def recoverWith() = {
+    def future(wait: Long) = Future {
+      println("future executing")
+      Thread.sleep(wait)
+      s"future completed after ${wait / 1000} seconds"
+    }
+
+    val f = future(-10).recoverWith {
+      case e =>
+        println("error caught")
+        Future(e.getMessage)
+    }
+    println(Await.result(f, 10.seconds))
   }
 
   /**
-    * Handle with trait type
+    * provide alteranative method to execute when future failed
+    *
+    * @return
     */
-  def handlePromize(): Unit = {
-    import PromizeProtocol._
-    val obj = Create("create", "rahasak", "001", "lambda", "ops", "12100", "dep")
-    println(obj.toJson.toString)
+  def fallbackTo() = {
+    def future(wait: Long) = Future {
+      println("future executing")
+      Thread.sleep(wait)
+      s"future completed after ${wait / 1000} seconds"
+    }
 
-    val json =
-      """
-        |{"messageType":"approve","execer":"rahasak","id":"001","salt":"83121"}
-      """.stripMargin
-    println(json.parseJson.convertTo[Promize])
+    // alteranative future to excute if first future failed
+    val f2 = Future(10)
+
+    val f3 = future(-10).fallbackTo(f2)
+    println(Await.result(f3, 10.seconds))
   }
 
-  /**
-    * Handle objects more than 22 fields
-    */
-  def handleDocument(): Unit = {
-    import DocumentProtocol._
-    val obj = Document(
-      "field1", "field2", "field3", "field4", "field5", "field6",
-      "field7", "field8", "field9", "field10", "field11", "field12",
-      "field13", "field14", "field15", "field16", "field17", "field18",
-      "field19", "field20", "field21", "field22", "field23", "field24",
-      approved = true
-    )
-    println(obj.toJson.toString())
+  def map() = {
+    val f1 = Future(10)
 
-    val json =
-      """
-        |{
-        |  "field1":"field1",
-        |  "field2":"field2",
-        |  "field3":"field3",
-        |  "field4":"field4",
-        |  "field5":"field5",
-        |  "field6":"field6",
-        |  "field7":"field7",
-        |  "field8":"field8",
-        |  "field9":"field9",
-        |  "field10":"field10",
-        |  "field11":"field11",
-        |  "field12":"field12",
-        |  "field13":"field13",
-        |  "field14":"field14",
-        |  "field15":"field15",
-        |  "field16":"field16",
-        |  "field17":"field17",
-        |  "field18":"field18",
-        |  "field19":"field19",
-        |  "field20":"field20",
-        |  "field21":"field21",
-        |  "field22":"field22",
-        |  "field23":"field23",
-        |  "field24":"field24",
-        |  "approved":true
-        |}
-      """.stripMargin
-    println(json.parseJson.convertTo[Document])
+    // map will return new future
+    val f2 = f1.map(p => p * 2)
+    println(Await.result(f2, 10.seconds))
+  }
+
+  def flatMap() = {
+    val f1 = Future(10)
+
+    // flatMap will remove future, if want another future we need to wrap the result with Future again
+    val f2 = f1.flatMap(p => Future(p * 2))
+    println(Await.result(f2, 10.seconds))
+
+    // we can remove nested futures and obtains one future with flatMap
+    val f3 = Future(Future(10))
+    val f4 = f3.flatMap(_.map(_ * 3))
+    println(Await.result(f4, 10.seconds))
+  }
+
+  def chain() = {
+    // we can handle sequence ftures with flatmap
+    def getUri(id: Int): Future[String] = Future(s"http://dev.localhost:8761/blobs/$id")
+
+    def downloadBlob(uri: String): Future[String] = Future("base64 encoded blob")
+
+    val f1 = getUri(1801).flatMap(uri => downloadBlob(uri))
+    println(Await.result(f1, 10.seconds))
+
+    // alos we can handle chain of gureus with for yield
+    val f2 = for {
+      uri <- getUri(1899)
+      blob <- downloadBlob(uri)
+    } yield blob
+    println(Await.result(f2, 10.seconds))
   }
 
 }
