@@ -9,7 +9,7 @@ import scala.util.{Failure, Success, Try}
 
 object Main extends App {
 
-  akkaAsk()
+  zip()
 
   /**
     * Get uri of blob
@@ -191,6 +191,52 @@ object Main extends App {
       decoded <- decodeBlob(blob)
     } yield decoded
     println(Await.result(f2, 10.seconds))
+  }
+
+  /**
+    * convert `Seq[Future[T]]` to `Future[Seq[T]]`
+    */
+  def sequence(): Unit = {
+    val f1: Future[Int] = Future {
+      println("run f1")
+      Thread.sleep(3000)
+      10
+    }
+    val f2: Future[String] = Future {
+      println("run f2")
+      Thread.sleep(1000)
+      "rahasak"
+    }
+    val f3: Future[Boolean] = Future {
+      println("run f3")
+      Thread.sleep(1000)
+      true
+    }
+
+    // sequence futures
+    val l: Seq[Future[Any]] = List(f1, f2, f3)
+    val s: Future[Seq[Any]] = Future.sequence(l)
+    println(Await.result(s, 10.seconds))
+  }
+
+  /**
+    * Combine results of two futures in to tuple
+    */
+  def zip(): Unit = {
+    val f1: Future[Int] = Future {
+      println("run f1")
+      Thread.sleep(3000)
+      10
+    }
+    val f2: Future[String] = Future {
+      println("run f2")
+      Thread.sleep(1000)
+      "rahasak"
+    }
+
+    // zip to tuple
+    val f: Future[(Int, String)] = f1.zip(f2)
+    println(Await.result(f, 10.seconds))
   }
 
   /**
