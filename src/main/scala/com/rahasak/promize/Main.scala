@@ -9,7 +9,7 @@ import scala.util.{Failure, Success, Try}
 
 object Main extends App {
 
-  chain()
+  akkaAsk()
 
   /**
     * Get uri of blob
@@ -191,6 +191,34 @@ object Main extends App {
       decoded <- decodeBlob(blob)
     } yield decoded
     println(Await.result(f2, 10.seconds))
+  }
+
+  /**
+    * Handle akka actor ask future
+    */
+  def akkaAsk(): Unit = {
+    import akka.actor.ActorSystem
+    import akka.pattern._
+    import akka.util.Timeout
+    import com.rahasak.promize.PromizeActor.{Request, Response}
+
+    def download(uri: String, timeout: Long) = {
+      implicit val system = ActorSystem.create("promize")
+      implicit val timestamp = Timeout(timeout.seconds)
+
+      (system.actorOf(PromizeActor.props()) ? Request(uri)).map {
+        case Response(payload) =>
+          println(s"success download $payload")
+        case resp =>
+          println(s"unrecognized response $resp")
+      }.recover {
+        case e =>
+          println(s"fail download ${e.getMessage}")
+      }
+    }
+
+    download("http://blobs/89923", 2)
+    download("http://blobs/89923", 5)
   }
 
 }
