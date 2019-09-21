@@ -1,4 +1,4 @@
-package com.rahasak.cats
+package com.rahasak.doobie
 
 import cats.effect.IO
 import doobie._
