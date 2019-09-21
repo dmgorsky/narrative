@@ -1,4 +1,4 @@
-package com.rahasak.cats
+package com.rahasak.doobie
 
 case class Document(id: String, name: String, timestamp: Long)
 
