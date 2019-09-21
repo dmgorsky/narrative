@@ -8,7 +8,7 @@ import doobie.util.transactor.Transactor
 
 object Dobbie extends App {
 
-  case class Country(name: String, code: String)
+  case class Document(id: String, name: String, timestamp: Long)
 
   // hikari pooling config
   val config = new HikariConfig()
@@ -28,26 +28,6 @@ object Dobbie extends App {
     "root"
   )
 
-  // insert query
-  def insert(country: Country): doobie.Update0 = {
-    sql"insert into countries (name, code) values (${country.name}, ${country.code})".update
-  }
-
-  // find country
-  def find(name: String): doobie.ConnectionIO[List[Country]] = {
-    sql"select * from countries where name = $name".query[Country].to[List]
-  }
-
-  // update query
-  def update(name: String, code: String): doobie.Update0 = {
-    sql"update countries set code = $code where name = $name".update
-  }
-
-  // delete query
-  def delete(name: String): doobie.Update0 = {
-    sql"delete from countries where name=$name".update
-  }
-
   //find().transact(transactor).unsafeRunSync().foreach(println)
   //insert("aka", "a").run.transact(transactor).unsafeRunSync()
   //update("hooooo", "aka").run.transact(transactor).unsafeRunSync()
@@ -56,28 +36,35 @@ object Dobbie extends App {
   // find
   val f = for {
     xa <- DbTransactor
-    result <- find("aka").transact(xa)
+    result <- Queries.find("aka").to[List].transact(xa)
   } yield result
   f.unsafeRunSync().foreach(println)
+
+  // fragment find
+  val frag = for {
+    xa <- DbTransactor
+    result <- Queries.fragmentFind("labs", asc = true).to[List].transact(xa)
+  } yield result
+  frag.unsafeRunSync().foreach(println)
 
   // insert
   val i = for {
     xa <- DbTransactor
-    result <- insert(Country("austria", "sw")).run.transact(xa)
+    result <- Queries.insert(Document("001", "rahasak", System.currentTimeMillis() / 100)).run.transact(xa)
   } yield result
   println(i.unsafeRunSync())
 
   // update
   val u = for {
     xa <- DbTransactor
-    result <- update("sweden", "swed").run.transact(xa)
+    result <- Queries.update("001", "labs").run.transact(xa)
   } yield result
   println(u.unsafeRunSync())
 
   // delete
   val d = for {
     xa <- DbTransactor
-    result <- delete("sweden").run.transact(xa)
+    result <- Queries.delete("001").run.transact(xa)
   } yield result
   println(d.unsafeRunSync())
 
