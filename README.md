@@ -1,3 +1,3 @@
 # Cats
 
-Read more from [here](https://medium.com/@itseranga/promise-for-better-future-a174ce501f2c)
+Read more from [here](https://medium.com/@itseranga/doobie-and-cats-effects-d01230be5c38)
