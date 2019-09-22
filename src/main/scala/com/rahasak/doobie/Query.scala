@@ -40,7 +40,7 @@ object Query {
   }
 
   // search document
-  def search(id: String) = {
+  def search(id: String): doobie.Query0[Document] = {
     sql"""
          |SELECT * FROM documents
          |WHERE name = $id
@@ -49,7 +49,7 @@ object Query {
   }
 
   // search with fragments
-  def searchWithFragment(name: String, asc: Boolean) = {
+  def searchWithFragment(name: String, asc: Boolean): doobie.Query0[Document] = {
     val f1 = fr"SELECT id, name, timestamp FROM documents"
     val f2 = fr"WHERE name = $name"
     val f3 = fr"ORDER BY timestamp" ++ (if (asc) fr"ASC" else fr"DESC")
