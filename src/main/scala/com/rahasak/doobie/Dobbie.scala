@@ -26,16 +26,23 @@ object Dobbie extends App {
   println(c.unsafeRunSync())
 
   // insert
-  val i = for {
+  val i1 = for {
     xa <- transactor
     result <- Query.insert(Document("002", "rahasak", System.currentTimeMillis() / 100)).run.transact(xa)
   } yield result
-  println(i.unsafeRunSync())
+  println(i1.unsafeRunSync())
+
+  // insert
+  val i2 = for {
+    xa <- transactor
+    result <- Query.insert(Document("001", "rahasak", System.currentTimeMillis() / 100)).run.transact(xa)
+  } yield result
+  println(i2.unsafeRunSync())
 
   // search
   val s = for {
     xa <- transactor
-    result <- Query.search("001").to[List].transact(xa)
+    result <- Query.search("002").to[List].transact(xa)
   } yield result
   s.unsafeRunSync().foreach(println)
 
