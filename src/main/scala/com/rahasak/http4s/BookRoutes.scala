@@ -8,7 +8,7 @@ import org.http4s.circe.CirceEntityCodec._
 import org.http4s.dsl.Http4sDsl
 
 object BookRoutes {
-  def routes(bookRepo: BookRepo): HttpRoutes[IO] = {
+  def routes(bookRepo: BookRepoImpl): HttpRoutes[IO] = {
     val dsl = new Http4sDsl[IO] {}
     import dsl._
 
