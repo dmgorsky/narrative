@@ -10,6 +10,10 @@ class DocumentRepoImpl(xa: Transactor[IO]) extends DocumentRepo {
     Query.insert(document).run.transact(xa)
   }
 
+  override def updateDocument(id: String, document: Document) = {
+    Query.update(document.id, document.name).run.transact(xa)
+  }
+
   override def getDocument(id: String) = {
     Query.searchId(id).option.transact(xa)
   }
