@@ -40,18 +40,25 @@ object Dobbie extends App {
   println(i2.unsafeRunSync())
 
   // search
-  val s = for {
+  val s1 = for {
     xa <- transactor
-    result <- Query.search("002").to[List].transact(xa)
+    result <- Query.search("rahasak").to[List].transact(xa)
   } yield result
-  s.unsafeRunSync().foreach(println)
+  s1.unsafeRunSync().foreach(println)
+
+  // search with id
+  val s2 = for {
+    xa <- transactor
+    result <- Query.searchWithId("001").option.transact(xa)
+  } yield result
+  println(s2.unsafeRunSync())
 
   // search with fragment
-  val f = for {
+  val s3 = for {
     xa <- transactor
     result <- Query.searchWithFragment("rahasak", asc = true).to[List].transact(xa)
   } yield result
-  f.unsafeRunSync().foreach(println)
+  s3.unsafeRunSync().foreach(println)
 
   // update
   val u = for {

@@ -16,7 +16,6 @@ libraryDependencies ++= {
     "org.tpolecat"      %% "doobie-h2"              % doobieVersion,
     "org.tpolecat"      %% "doobie-hikari"          % doobieVersion,
     "org.tpolecat"      %% "doobie-specs2"          % doobieVersion,
-    "org.tpolecat"      %% "doobie-postgres"        % doobieVersion,
     "org.tpolecat"      %% "doobie-scalatest"       % doobieVersion       % "test",
     "io.monix"          %% "monix"                  % "2.3.3",
     "org.http4s"        %% "http4s-blaze-server"    % Http4sVersion,

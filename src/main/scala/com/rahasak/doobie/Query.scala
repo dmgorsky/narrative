@@ -40,7 +40,16 @@ object Query {
   }
 
   // search document
-  def searchId(id: String): doobie.Query0[Document] = {
+  def search(name: String): doobie.Query0[Document] = {
+    sql"""
+         |SELECT * FROM documents
+         |WHERE name = $name
+       """.stripMargin
+      .query[Document]
+  }
+
+  // search id
+  def searchWithId(id: String): doobie.Query0[Document] = {
     sql"""
          |SELECT * FROM documents
          |WHERE id = $id
@@ -50,20 +59,11 @@ object Query {
   }
 
   // search all
-  def searchAll(offset: Int, limit: Int): doobie.Query0[Document] = {
+  def searchWithRange(offset: Int, limit: Int): doobie.Query0[Document] = {
     sql"""
          |SELECT * FROM documents
          |LIMIT $limit
          |OFFSET $offset
-       """.stripMargin
-      .query[Document]
-  }
-
-  // search document
-  def search(id: String): doobie.Query0[Document] = {
-    sql"""
-         |SELECT * FROM documents
-         |WHERE name = $id
        """.stripMargin
       .query[Document]
   }

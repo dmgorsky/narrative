@@ -24,7 +24,11 @@ class QuerySpec extends WordSpec with Matchers with IOChecker {
   }
 
   "check search" in {
-    check(Query.search("002"))
+    check(Query.search("rahasak"))
+  }
+
+  "check searchWithId" in {
+    check(Query.searchWithId("002"))
   }
 
   "check searchWithFragment" in {
