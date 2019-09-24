@@ -1,28 +1,9 @@
 package com.rahasak.http4s
 
 import cats.effect.IO
-import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
-import doobie.hikari._
 import doobie.util.transactor.Transactor
 
 import scala.collection.mutable
-
-object BookRepoImpl {
-  def withDoobieTransactor(): IO[BookRepoImpl] = {
-    // hikari pooling config with mysql
-    val config = new HikariConfig()
-    config.setJdbcUrl("jdbc:mysql://localhost:3306/mystiko")
-    config.setUsername("root")
-    config.setPassword("root")
-    config.setMaximumPoolSize(5)
-
-    // transactor with config
-    val transactor: HikariTransactor[IO] = HikariTransactor.apply[IO](new HikariDataSource(config))
-    IO {
-      new BookRepoImpl(transactor)
-    }
-  }
-}
 
 class BookRepoImpl(xa: Transactor[IO]) extends BookRepo {
 

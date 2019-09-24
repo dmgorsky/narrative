@@ -1,5 +1,6 @@
 package com.rahasak.http4s
 
+import cats.data.Kleisli
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.implicits._
 import doobie.util.transactor.Transactor
@@ -7,12 +8,13 @@ import fs2.Stream
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
+import org.http4s.{Request, Response}
 
 object Main extends IOApp {
 
-  def makeRouter(transactor: Transactor[IO]) = {
+  def makeRouter(transactor: Transactor[IO]): Kleisli[IO, Request[IO], Response[IO]] = {
     Router[IO](
-      "/api/v1" -> BookRoutes.routes(new BookRepoImpl(transactor))
+      "/api/v1" -> DocumentRoutes.routes(new DocumentRepoImpl(transactor))
     ).orNotFound
   }
 
