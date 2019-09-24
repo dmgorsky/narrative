@@ -15,11 +15,11 @@ class DocumentRepoImpl(xa: Transactor[IO]) extends DocumentRepo {
   }
 
   override def getDocument(id: String) = {
-    Query.searchId(id).option.transact(xa)
+    Query.searchWithId(id).option.transact(xa)
   }
 
   override def getDocuments() = {
-    Query.searchAll(0, 10).to[List].transact(xa)
+    Query.searchWithRange(0, 10).to[List].transact(xa)
   }
 }
 
