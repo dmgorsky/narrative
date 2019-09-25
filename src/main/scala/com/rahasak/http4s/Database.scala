@@ -1,7 +1,6 @@
 package com.rahasak.http4s
 
 import cats.effect.IO
-import com.rahasak.doobie.Query
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 import doobie.hikari.HikariTransactor
 import doobie.implicits._

@@ -14,7 +14,7 @@ object Main extends IOApp {
 
   def makeRouter(transactor: Transactor[IO]): Kleisli[IO, Request[IO], Response[IO]] = {
     Router[IO](
-      "/api/v1" -> DocumentRoutes.routes(new DocumentRepoImpl(transactor))
+      "/api/v1" -> DocumentRoutes.routes(new AccountRepoImpl(transactor))
     ).orNotFound
   }
 
