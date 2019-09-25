@@ -10,7 +10,7 @@ import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.{Request, Response}
 
-object Main extends IOApp {
+object Http4s extends IOApp {
 
   def makeRouter(transactor: Transactor[IO]): Kleisli[IO, Request[IO], Response[IO]] = {
     Router[IO](
