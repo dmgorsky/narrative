@@ -18,9 +18,9 @@ object Main extends IOApp {
     ).orNotFound
   }
 
-  def serveStream(transactor: Transactor[IO]) = {
+  def serveStream(transactor: Transactor[IO], serverConfig: ServerConfig) = {
     BlazeServerBuilder[IO]
-      .bindHttp(8761, "0.0.0.0")
+      .bindHttp(serverConfig.port, serverConfig.host)
       .withHttpApp(makeRouter(transactor))
       .serve
   }
@@ -28,9 +28,9 @@ object Main extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = {
     val stream = for {
       config <- Stream.eval(Config.load())
-      xa <- Stream.eval(Database.transactor(config))
-      _ <- Stream.eval(Database.init(xa))
-      exitCode <- serveStream(xa)
+      xa <- Stream.eval(Database.transactor(config.dbConfig))
+      _ <- Stream.eval(Database.bootstrap(xa))
+      exitCode <- serveStream(xa, config.serverConfig)
     } yield exitCode
 
     stream.compile.drain.as(ExitCode.Success)

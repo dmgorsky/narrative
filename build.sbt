@@ -22,6 +22,7 @@ libraryDependencies ++= {
     "org.http4s"        %% "http4s-circe"           % Http4sVersion,
     "org.http4s"        %% "http4s-dsl"             % Http4sVersion,
     "io.circe"          %% "circe-generic"          % CirceVersion,
+    "io.circe"          %% "circe-config"           % "0.6.1",
     "mysql"             % "mysql-connector-java"    % "5.1.34",
     "org.slf4j"         % "slf4j-api"               % "1.7.5",
     "ch.qos.logback"    % "logback-classic"         % "1.0.9"
