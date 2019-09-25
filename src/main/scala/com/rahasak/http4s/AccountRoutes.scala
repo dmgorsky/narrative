@@ -6,7 +6,14 @@ import org.http4s._
 import org.http4s.circe.CirceEntityCodec._
 import org.http4s.dsl.Http4sDsl
 
-object DocumentRoutes {
+object AccountRoutes {
+  /**
+    * define following APIS
+    *   1. create account — POST api/v1/accounts
+    *   2. update account — PUT api/v1/accounts/{id}
+    *   3. get account — GET api/v1/accounts/{id}
+    *   4. search accounts — GET api/v1/accounts
+    */
   def routes(documentRepo: AccountRepo): HttpRoutes[IO] = {
     val dsl = new Http4sDsl[IO] {}
     import dsl._
