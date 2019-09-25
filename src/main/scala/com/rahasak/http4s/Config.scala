@@ -11,7 +11,7 @@ case class DbConfig(url: String, username: String, password: String, poolSize: I
 case class Config(serverConfig: ServerConfig, dbConfig: DbConfig)
 
 object Config {
-  def load() = {
+  def load(): IO[Config] = {
     for {
       dbConf <- parser.decodePathF[IO, DbConfig]("db")
       serverConf <- parser.decodePathF[IO, ServerConfig]("server")

@@ -23,7 +23,7 @@ object Database {
   }
 
   def bootstrap(xa: Transactor[IO]): IO[Int] = {
-    Query.createTable.run.transact(xa)
+    AccountQuery.createTable.run.transact(xa)
   }
 
 }

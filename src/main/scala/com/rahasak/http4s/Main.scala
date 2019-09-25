@@ -14,11 +14,11 @@ object Main extends IOApp {
 
   def makeRouter(transactor: Transactor[IO]): Kleisli[IO, Request[IO], Response[IO]] = {
     Router[IO](
-      "/api/v1" -> DocumentRoutes.routes(new AccountRepoImpl(transactor))
+      "/api/v1" -> AccountRoutes.routes(new AccountRepoImpl(transactor))
     ).orNotFound
   }
 
-  def serveStream(transactor: Transactor[IO], serverConfig: ServerConfig) = {
+  def serveStream(transactor: Transactor[IO], serverConfig: ServerConfig): Stream[IO, ExitCode] = {
     BlazeServerBuilder[IO]
       .bindHttp(serverConfig.port, serverConfig.host)
       .withHttpApp(makeRouter(transactor))

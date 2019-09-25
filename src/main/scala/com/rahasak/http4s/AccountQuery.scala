@@ -2,7 +2,7 @@ package com.rahasak.http4s
 
 import doobie.implicits._
 
-object Query {
+object AccountQuery {
 
   def createDb = {
     sql"""
