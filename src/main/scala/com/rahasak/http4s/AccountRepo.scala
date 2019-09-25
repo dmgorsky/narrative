@@ -4,7 +4,7 @@ import cats.effect.IO
 
 
 trait AccountRepo {
-  def createAccount(account: Account): IO[Int]
+  def createAccount(account: Account): IO[String]
 
   def updateAccount(id: String, account: Account): IO[Int]
 

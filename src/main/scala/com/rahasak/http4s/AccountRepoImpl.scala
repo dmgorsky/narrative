@@ -6,7 +6,12 @@ import doobie.util.transactor.Transactor
 
 class AccountRepoImpl(xa: Transactor[IO]) extends AccountRepo {
   override def createAccount(account: Account) = {
-    AccountQuery.insert(account).run.transact(xa)
+    for {
+      i <- AccountQuery.insert(account).run.transact(xa)
+      s <- IO {
+        if (i == 1) account.id else "-1"
+      }
+    } yield s
   }
 
   override def updateAccount(id: String, account: Account) = {
