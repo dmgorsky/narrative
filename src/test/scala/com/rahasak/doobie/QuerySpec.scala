@@ -3,10 +3,11 @@ package com.rahasak.doobie
 import cats.effect.IO
 import doobie._
 import doobie.implicits._
-import doobie.scalatest._
-import org.scalatest._
+import doobie.specs2._
+import org.specs2.mutable.Specification
 
-class QuerySpec extends WordSpec with Matchers with IOChecker {
+
+class QuerySpec extends Specification with IOChecker {
 
   val transactor = {
     val tx = Transactor
