@@ -1,1 +1,11 @@
 logLevel := Level.Warn
+addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
+addSbtPlugin("com.dwijnand"      % "sbt-dynver"      % "4.1.1")
+addSbtPlugin("de.heikoseeberger" % "sbt-header"      % "5.6.0")
+addSbtPlugin("io.spray"          % "sbt-revolver"    % "0.9.1")
+addSbtPlugin("org.scalameta"     % "sbt-scalafmt"    % "2.4.6")
+addSbtPlugin("org.scoverage"     % "sbt-scoverage"   % "1.9.3")
+addSbtPlugin("org.wartremover"   % "sbt-wartremover" % "2.4.16")
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "1.2.0")
+enablePlugins(SbtPlugin)
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.8.0")
